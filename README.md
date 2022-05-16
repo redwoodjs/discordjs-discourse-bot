@@ -8,15 +8,19 @@ Generates three buttons: Submit Message, Submit Thread/Channel, Select Message
 
 Fetches messages based on button click
 
+Sends to Discourse Plugin
+
+Posts to Discourse topic
+
 ## How to run:
 
-Clone repo > yarn install
+Clone repo > `yarn install`
 
-Following these instructions to set up config.json: https://discordjs.guide/creating-your-bot/#creating-configuration-files
+See these instructions to set up `config.json`: https://discordjs.guide/creating-your-bot/#creating-configuration-files
 
-And see where to get `guildId` and `clientId` from: https://discordjs.guide/creating-your-bot/creating-commands.html#command-deployment-script
+And find where to get `guildId` and `clientId` from: https://discordjs.guide/creating-your-bot/creating-commands.html#command-deployment-script
 
-Set up config.json file with these three tokens discord developer portal info and guild id
+Set up `config.json` file with these three tokens:
 
 ```
 {
