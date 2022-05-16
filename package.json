@@ -1,0 +1,16 @@
+{
+  "name": "discordjs-discourse-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Barrett <barrettburnworth@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
+    "discord-api-types": "^0.32.1",
+    "discord.js": "^13.7.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0"
+  }
+}
