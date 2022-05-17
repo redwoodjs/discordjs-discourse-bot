@@ -8,7 +8,9 @@ Generates three buttons: Submit Message, Submit Thread/Channel, Select Message
 
 Fetches messages based on button click
 
-Sends to Discourse Plugin
+Sends to Discourse Plugin 
+
+(https://github.com/discourse/discourse-prometheus-alert-receiver)?
 
 Posts to Discourse topic
 
