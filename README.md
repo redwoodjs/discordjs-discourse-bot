@@ -35,9 +35,13 @@ Posts to Discourse topic
 
 Clone repo > `yarn install`
 
-See these instructions to set up `config.json`: https://discordjs.guide/creating-your-bot/#creating-configuration-files
+See these instructions to set up `config.json` & get `token`: https://discordjs.guide/creating-your-bot/#creating-configuration-files
 
 And find where to get `guildId` and `clientId` from: https://discordjs.guide/creating-your-bot/creating-commands.html#command-deployment-script
+
+> TIP
+>
+> In order to get your application's client id, go to Discord Developer Portal and choose your application. Find the id under "Application ID" in General Information subpage. To get guild id, open Discord and go to your settings. On the "Advanced" page, turn on "Developer Mode". This will enable a "Copy ID" button in the context menu when you right-click on a server icon, a user's profile, etc.
 
 Set up `config.json` file with these three tokens:
 
@@ -46,6 +50,10 @@ Set up `config.json` file with these three tokens:
     "clientId": "",
 	"guildId": "",
 	"token": ""
+
+	"hostname": "",
+    "apiKey": "",
+    "apiUsername": ""
 }
 ```
 
@@ -59,9 +67,9 @@ run: `node index.js`
 
 # Work In Progress
 
-**To-Do**: Create discourse plugin to accept message and post to topic
+~~**To-Do**: Create discourse plugin to accept message and post to topic~~
 
-**To-Do**: Send function has not been fleshed out
+**To-Do**: Convert to ES6?/RW
 
 **Cleanup**: Fetch all messages function can be cleaner
 
