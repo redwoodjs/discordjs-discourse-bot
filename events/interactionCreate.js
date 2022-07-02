@@ -5,8 +5,9 @@ const {
   MessageSelectMenu,
 } = require("discord.js");
 
+const discoursePost = require("../functions/discourse.js").discoursePost
 
-// unsure if passing client is necessary
+// QUESTION unsure if passing client as prop is necessary 
 
 module.exports = {
   name: "interactionCreate",
@@ -39,10 +40,13 @@ module.exports = {
       let message = "";
       let user = "";
 
+      messages = [];
+
       const channel = client.channels.cache.get(interaction.channelId);
       await channel.messages.fetch(interaction.targetId).then((m) => {
         user = m.author.username;
         message = m.content;
+        messages = { title: user, content: message};
       });
 
       const embed = new MessageEmbed()
@@ -62,12 +66,20 @@ module.exports = {
     // Button Functions
     // *********************
 
+    // Submit selected messages if 'Submit this Message' button is clicked
+
+    if (interaction.customId == "messageSubmit") {
+      discoursePost(JSON.stringify(messages))
+    }
+
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
       fetchAllMessages(interaction.channelId).then((m) => {
+        console.log(discoursePost(m.length + " messages"));
         interaction.reply({ content: m.length + " messages" });
       });
+      
     }
 
     // Build message selectors if 'Select Messages' button is clicked
@@ -127,7 +139,7 @@ module.exports = {
         messages += '\n'
       });
 
-
+      // console.log(discoursePost(messages))
       await interaction.reply({
         content:
           "Your Discourse topic will look like the following: \n \n" +
