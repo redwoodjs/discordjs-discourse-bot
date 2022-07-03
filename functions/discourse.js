@@ -20,8 +20,8 @@ function discoursePost(message) {
   // Next leg of dev will be refactoring and writing in Redwood on API side;
   // Then will pick up here
   var data = {
-    title: "This is a test post from Discord bot.",
-    raw: "This is a test message from discord discourse bot. It is over 20 characters.",
+    title: message.title,
+    raw: message.content,
     category: 22
   };
 

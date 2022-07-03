@@ -46,7 +46,7 @@ module.exports = {
       await channel.messages.fetch(interaction.targetId).then((m) => {
         user = m.author.username;
         message = m.content;
-        messages = { title: user, content: message};
+        messages = { title: message, content: user + "\n" + message};
       });
 
       const embed = new MessageEmbed()
@@ -69,14 +69,16 @@ module.exports = {
     // Submit selected messages if 'Submit this Message' button is clicked
 
     if (interaction.customId == "messageSubmit") {
-      discoursePost(JSON.stringify(messages))
+      discoursePost(messages)
     }
 
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
       fetchAllMessages(interaction.channelId).then((m) => {
-        console.log(discoursePost(m.length + " messages"));
+        console.log(m);
+        if (interaction.channelId.isThread) {console.log("thread")}
+
         interaction.reply({ content: m.length + " messages" });
       });
       
@@ -168,7 +170,7 @@ module.exports = {
 
       if (channel.isThread()) {
         threadName = channel.name;
-        console.log(threadName);
+        console.log("Thread" + threadName);
       }
 
       // Create message pointer
