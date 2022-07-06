@@ -46,7 +46,7 @@ module.exports = {
       await channel.messages.fetch(interaction.targetId).then((m) => {
         user = m.author.username;
         message = m.content;
-        messages = { title: message, content: user + "\n" + message};
+        messages = { title: message, raw: user + "\n" + message};
       });
 
       const embed = new MessageEmbed()
@@ -75,11 +75,23 @@ module.exports = {
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
-      fetchAllMessages(interaction.channelId).then((m) => {
-        console.log(m);
-        if (interaction.channelId.isThread) {console.log("thread")}
+      messages = { 
+        title: '',
+        raw: ''
+      }
 
-        interaction.reply({ content: m.length + " messages" });
+      fetchAllMessages(interaction.channelId).then((m) => {
+
+        messages.title = m[m.length - 1].content
+
+        m.slice(0).reverse().forEach((m) => {
+          messages.raw += '**' + m.username + '**\n'
+          messages.raw += m.content + '\n'
+          messages.raw += '\n'
+        });
+
+//        interaction.reply({ content: m.length + " messages" });
+        discoursePost(messages)
       });
       
     }
@@ -89,11 +101,11 @@ module.exports = {
       itemsJson = "";
       
       fetchAllMessages(interaction.channelId).then((m) => {
-        itemsJson = JSON.stringify(m);
+        itemsJson = JSON.stringify(m.length);
         
         // May want to use a Collector() object for options instead of array
         options = [];
-        m.map((m) => {
+        m.forEach((m) => {
           let object = {};
           object.label = m.username;
           object.description = limit(m.content, 100);
@@ -136,12 +148,11 @@ module.exports = {
 
       interaction.values.forEach((m) => {
         message = client.messages.get(m);
-        messages += message.username + '\n'
+        messages += '**' + message.username + '**\n'
         messages += message.content + '\n'
         messages += '\n'
       });
 
-      // console.log(discoursePost(messages))
       await interaction.reply({
         content:
           "Your Discourse topic will look like the following: \n \n" +
@@ -157,6 +168,11 @@ module.exports = {
     function limit(string = "", limit = 0) {
       return string.substring(0, limit);
     }
+
+
+    // TODO: Function: Format post data: { title: 'string', content: 'string' }
+    // Single function to process all three message submittal options
+    
 
     // Fetch all messages & return author, content, id and timestamp
     // Function skeleton taken from stack overflow answer.

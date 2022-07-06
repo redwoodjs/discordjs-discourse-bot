@@ -21,10 +21,12 @@ function discoursePost(message) {
   // Then will pick up here
   var data = {
     title: message.title,
-    raw: message.content,
+    raw: message.raw,
     category: 22
   };
 
+  console.log(data)
+  console.log(message)
   data = JSON.stringify(data);
 
   const options = {

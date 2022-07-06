@@ -71,3 +71,6 @@ Check errors & Report:
 
 statusCode: 422
 {"action":"create_post","errors":["Title has already been used"]}
+
+
+// filter needle username out
