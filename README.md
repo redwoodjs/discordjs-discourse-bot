@@ -51,6 +51,8 @@ run: `node index.js`
 ~~**To-Do**: Create discourse plugin to accept message and post to topic~~
 
 **To-Do**: Convert to ES6?/RW
+Filter needle username out
+Parse ``` at end of code blocks into newline
 
 **Cleanup**: Fetch all messages function can be cleaner
 
@@ -73,4 +75,3 @@ statusCode: 422
 {"action":"create_post","errors":["Title has already been used"]}
 
 
-// filter needle username out
