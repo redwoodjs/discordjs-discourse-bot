@@ -25,8 +25,6 @@ function discoursePost(message) {
     category: 22
   };
 
-  console.log(data)
-  console.log(message)
   data = JSON.stringify(data);
 
   const options = {

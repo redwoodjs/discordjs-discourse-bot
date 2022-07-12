@@ -9,5 +9,9 @@ module.exports = {
 		// Set up messages collection on client to push to
 		const messages = new Collection();
 		client.messages = messages
+
+		// Set up messages collection on client to push to
+		const selectMessages = new Collection();
+		client.selectMessages = selectMessages
 	},
 };

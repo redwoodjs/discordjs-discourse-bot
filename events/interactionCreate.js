@@ -5,14 +5,13 @@ const {
   MessageSelectMenu,
 } = require("discord.js");
 
-const discoursePost = require("../functions/discourse.js").discoursePost
+const discoursePost = require("../functions/discourse.js").discoursePost;
 
-// QUESTION unsure if passing client as prop is necessary 
+// QUESTION unsure if passing client as prop is necessary
 
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
-
     // *********************
     // Menu & Button Setters
     // *********************
@@ -46,7 +45,7 @@ module.exports = {
       await channel.messages.fetch(interaction.targetId).then((m) => {
         user = m.author.username;
         message = m.content;
-        messages = { title: message, raw: user + "\n" + message};
+        messages = { title: message, raw: user + "\n" + message };
       });
 
       const embed = new MessageEmbed()
@@ -69,43 +68,39 @@ module.exports = {
     // Submit selected messages if 'Submit this Message' button is clicked
 
     if (interaction.customId == "messageSubmit") {
-      discoursePost(messages)
+      discoursePost(messages);
     }
 
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
-      messages = { 
-        title: '',
-        raw: ''
-      }
+      let result = await fetchThreadMessages(interaction.channelId);
 
-      fetchAllMessages(interaction.channelId).then((m) => {
+      if (result) {
+        messages = {
+          title: "",
+          raw: "",
+        };
 
-        messages.title = m[m.length - 1].content
-
-        m.slice(0).reverse().forEach((m) => {
-          messages.raw += '**' + m.username + '**\n'
-          messages.raw += m.content + '\n'
-          messages.raw += '\n'
+        messages.title = client.messages.first().content;
+        client.messages.forEach((m) => {
+          messages.raw += "**" + m.username + "**\n";
+          messages.raw += m.content + "\n";
+          messages.raw += "\n";
         });
 
-//        interaction.reply({ content: m.length + " messages" });
-        discoursePost(messages)
-      });
-      
+        discoursePost(messages);
+      }
     }
 
     // Build message selectors if 'Select Messages' button is clicked
     if (interaction.customId == "selectMessages") {
-      itemsJson = "";
-      
-      fetchAllMessages(interaction.channelId).then((m) => {
-        itemsJson = JSON.stringify(m.length);
-        
+      let result = await fetchThreadMessages(interaction.channelId);
+
+      if (result) {
         // May want to use a Collector() object for options instead of array
         options = [];
-        m.forEach((m) => {
+        client.messages.forEach((m) => {
           let object = {};
           object.label = m.username;
           object.description = limit(m.content, 100);
@@ -113,16 +108,18 @@ module.exports = {
           options.push(object);
         });
 
-        // Truncate message to 25; 
+        // Truncate message to 25;
         // Expand this to multiple select menus to allow for more message history selection
-        options.length = 25;
+        if (options.length > 25) {
+          options.length = 25;
+        }
 
         const row = new MessageActionRow().addComponents(
           new MessageSelectMenu()
             .setCustomId("select")
             .setPlaceholder("Nothing selected")
             .setMinValues(1)
-            .setMaxValues(25)
+            .setMaxValues(options.length)
             .addOptions(
               options.map((item) => {
                 return {
@@ -134,8 +131,12 @@ module.exports = {
             )
         );
 
-        interaction.reply({ content: "Select messages", components: [row] });
-      });
+        interaction.reply({
+          content: "Select messages",
+          ephemeral: true,
+          components: [row],
+        });
+      }
     }
 
     // *********************
@@ -144,19 +145,54 @@ module.exports = {
 
     // Catch selected message Ids, compose messages, send to Discourse
     if (interaction.isSelectMenu()) {
-      messages = [];
+      messages = {
+        title: "",
+        raw: "",
+      };
 
+      messages.title = client.messages.get(interaction.values[0]).content;
       interaction.values.forEach((m) => {
         message = client.messages.get(m);
-        messages += '**' + message.username + '**\n'
-        messages += message.content + '\n'
-        messages += '\n'
+        messages.raw += "**" + message.username + "**\n";
+        messages.raw += message.content + "\n";
+        messages.raw += "\n";
       });
+
+      const row = new MessageActionRow().addComponents(
+        new MessageButton()
+          .setCustomId("abortSubmission")
+          .setLabel("Abort Submission")
+          .setStyle("DANGER"),
+
+        new MessageButton()
+          .setCustomId("submitSelected")
+          .setLabel("Submit")
+          .setStyle("PRIMARY")
+      );
+
+      client.selectMessages.set(1, messages);
 
       await interaction.reply({
         content:
           "Your Discourse topic will look like the following: \n \n" +
-          messages
+          messages.raw,
+        ephemeral: true,
+        components: [row],
+      });
+    }
+
+    if (interaction.customId == "submitSelected") {
+      // Should this be async, and then run a .clear() function on collection after returns true?
+      discoursePost(client.selectMessages);
+    }
+
+    if (interaction.customId == "abortSubmission") {
+      client.messages.clear();
+      client.selectMessages.clear();
+
+      await interaction.reply({
+        content: "Message submission aborted and cleared.",
+        ephemeral: true,
       });
     }
 
@@ -169,53 +205,66 @@ module.exports = {
       return string.substring(0, limit);
     }
 
+    // Fetch starter message from thread
 
-    // TODO: Function: Format post data: { title: 'string', content: 'string' }
-    // Single function to process all three message submittal options
-    
+    async function getThreadStarter(msg) {
+      const chan = client.channels.cache.get(msg.reference.channelId);
+      const mess = await chan.messages.fetch(msg.reference.messageId);
+      return mess;
+    }
 
-    // Fetch all messages & return author, content, id and timestamp
-    // Function skeleton taken from stack overflow answer.
+    // Format message content for posts
+    function formatMessage(msg) {
+      fMessage = {};
+      fMessage.content = msg.content;
+      fMessage.username = msg.author.username;
+      fMessage.createdTimestamp = msg.createdTimestamp;
+      fMessage.id = msg.id;
 
-    async function fetchAllMessages(channelId) {
+      return fMessage;
+    }
+
+    // fetch over 100 function taken from: https://stackoverflow.com/a/71620968
+    // pointer is updated in message (while) loop
+
+    async function fetchThreadMessages(channelId) {
       const channel = client.channels.cache.get(channelId);
-
-      // may be able to use the client.messages collection here instead of array
-      // already pushing to it for storage
-      let messages = [];
 
       if (channel.isThread()) {
         threadName = channel.name;
-        console.log("Thread" + threadName);
       }
 
       // Create message pointer
+      // Fetches first message
+      // Then fetches messages before that message
+
       let message = await channel.messages
         .fetch({ limit: 1 })
         .then((messagePage) =>
           messagePage.size === 1 ? messagePage.at(0) : null
         );
 
-      const mDetail = {};
-      mDetail.content = message.content;
-      mDetail.username = message.author.username;
-      mDetail.createdTimestamp = message.createdTimestamp;
-      mDetail.id = message.id;
-
+      var mDetail = formatMessage(message);
       client.messages.set(mDetail.id, mDetail);
+
       while (message) {
         await channel.messages
           .fetch({ limit: 100, before: message.id })
           .then((messagePage) => {
             messagePage.forEach((msg) => {
-              const mDetails = {};
-              mDetails.content = msg.content;
-              mDetails.username = msg.author.username;
-              mDetails.createdTimestamp = msg.createdTimestamp;
-              mDetails.id = msg.id;
-              client.messages.set(mDetails.id, mDetails);
-
-              messages.push(mDetails);
+              // this has issues (i believe) with starter messages that have been edited 
+              if (msg.type == "THREAD_STARTER_MESSAGE") {
+                getThreadStarter(msg).then((m) => {
+                  mDetail = formatMessage(m);
+                  // ideally this would be below; after the else... but it doesn't work unless here (promises...)
+                  client.messages.set(mDetail.id, mDetail);
+                });
+              } else {
+                mDetail = formatMessage(msg);
+              }
+              if (mDetail.id) {
+                client.messages.set(mDetail.id, mDetail);
+              }
             });
             // Update our message pointer to be last message in page of messages
             message =
@@ -225,7 +274,56 @@ module.exports = {
           });
       }
 
-      return messages;
+      client.messages.sort();
+      return true;
+    }
+
+    // Fetch all messages & return author, content, id and timestamp
+    // Function skeleton taken from stack overflow answer.
+    // Same as above; should be removed? Is being used for select option
+    // archived currently; should be removed...
+
+    async function fetchAllMessages(channelId) {
+      const channel = client.channels.cache.get(channelId);
+
+      if (channel.isThread()) {
+        threadName = channel.name;
+      }
+
+      // Create message pointer
+      let message = await channel.messages
+        .fetch({ limit: 1 })
+        .then((messagePage) =>
+          messagePage.size === 1 ? messagePage.at(0) : null
+        );
+
+      var mDetail = formatMessage(message);
+      client.messages.set(mDetail.id, mDetail);
+
+      while (message) {
+        await channel.messages
+          .fetch({ limit: 100, before: message.id })
+          .then((messagePage) => {
+            messagePage.forEach((msg) => {
+              if (msg.type == "THREAD_STARTER_MESSAGE") {
+                getThreadStarter(msg).then((m) => {
+                  mDetail = formatMessage(m);
+                  client.messages.set(mDetail.id, mDetail);
+                });
+              } else {
+                mDetail = formatMessage(msg);
+              }
+              client.messages.set(mDetails.id, mDetails);
+            });
+            // Update our message pointer to be last message in page of messages
+            message =
+              0 < messagePage.size
+                ? messagePage.at(messagePage.size - 1)
+                : null;
+          });
+      }
+
+      return true;
     }
   },
 };
