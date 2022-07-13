@@ -12,6 +12,10 @@ const discoursePost = require("../functions/discourse.js").discoursePost;
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
+
+    // Filter for bots, etc
+    var excludedUsers = ["975038570546987018", "878399831238909952"];
+
     // *********************
     // Menu & Button Setters
     // *********************
@@ -40,7 +44,6 @@ module.exports = {
       let user = "";
 
       messages = [];
-
       const channel = client.channels.cache.get(interaction.channelId);
       await channel.messages.fetch(interaction.targetId).then((m) => {
         user = m.author.username;
@@ -69,12 +72,15 @@ module.exports = {
 
     if (interaction.customId == "messageSubmit") {
       discoursePost(messages);
+      await interaction.reply({
+        content: "Message submitted to discourse by " + interaction.user,
+      });
     }
 
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
-      let result = await fetchThreadMessages(interaction.channelId);
+      let result = await fetchAllMessages(interaction.channelId);
 
       if (result) {
         messages = {
@@ -90,12 +96,16 @@ module.exports = {
         });
 
         discoursePost(messages);
+
+        await interaction.reply({
+          content: "Message submitted to discourse by " + interaction.user,
+        });
       }
     }
 
     // Build message selectors if 'Select Messages' button is clicked
     if (interaction.customId == "selectMessages") {
-      let result = await fetchThreadMessages(interaction.channelId);
+      let result = await fetchRecentMessages(interaction.channelId);
 
       if (result) {
         // May want to use a Collector() object for options instead of array
@@ -183,7 +193,10 @@ module.exports = {
 
     if (interaction.customId == "submitSelected") {
       // Should this be async, and then run a .clear() function on collection after returns true?
-      discoursePost(client.selectMessages);
+      discoursePost(client.selectMessages.first());
+      await interaction.reply({
+        content: "Message submitted to discourse by " + interaction.user,
+      });
     }
 
     if (interaction.customId == "abortSubmission") {
@@ -227,7 +240,7 @@ module.exports = {
     // fetch over 100 function taken from: https://stackoverflow.com/a/71620968
     // pointer is updated in message (while) loop
 
-    async function fetchThreadMessages(channelId) {
+    async function fetchAllMessages(channelId) {
       const channel = client.channels.cache.get(channelId);
 
       if (channel.isThread()) {
@@ -237,6 +250,10 @@ module.exports = {
       // Create message pointer
       // Fetches first message
       // Then fetches messages before that message
+      // In a channel with > 100 messages, this can be an issue...
+      // For the select menu, we want it to fetch the most recent
+      // and then move up from there
+      // but in the post, we want it to post from top down...
 
       let message = await channel.messages
         .fetch({ limit: 1 })
@@ -250,9 +267,12 @@ module.exports = {
       while (message) {
         await channel.messages
           .fetch({ limit: 100, before: message.id })
+          .then((messagePage) =>
+            messagePage.filter((m) => !excludedUsers.includes(m.author.id))
+          )
           .then((messagePage) => {
             messagePage.forEach((msg) => {
-              // this has issues (i believe) with starter messages that have been edited 
+              // this has issues (i believe) with starter messages that have been edited
               if (msg.type == "THREAD_STARTER_MESSAGE") {
                 getThreadStarter(msg).then((m) => {
                   mDetail = formatMessage(m);
@@ -274,55 +294,43 @@ module.exports = {
           });
       }
 
+      client.messages.sweep((user) => user.id === 975038570546987018);
       client.messages.sort();
       return true;
     }
 
-    // Fetch all messages & return author, content, id and timestamp
-    // Function skeleton taken from stack overflow answer.
-    // Same as above; should be removed? Is being used for select option
-    // archived currently; should be removed...
+    // Limit to fetch most recent 25 messages (for Select Menu)
+    // Update to fetch more to allow for multiple select menus (25+ messages)
 
-    async function fetchAllMessages(channelId) {
+    async function fetchRecentMessages(channelId) {
       const channel = client.channels.cache.get(channelId);
 
       if (channel.isThread()) {
         threadName = channel.name;
       }
 
-      // Create message pointer
-      let message = await channel.messages
-        .fetch({ limit: 1 })
+      await channel.messages
+        .fetch({ limit: 25 })
         .then((messagePage) =>
-          messagePage.size === 1 ? messagePage.at(0) : null
-        );
-
-      var mDetail = formatMessage(message);
-      client.messages.set(mDetail.id, mDetail);
-
-      while (message) {
-        await channel.messages
-          .fetch({ limit: 100, before: message.id })
-          .then((messagePage) => {
-            messagePage.forEach((msg) => {
-              if (msg.type == "THREAD_STARTER_MESSAGE") {
-                getThreadStarter(msg).then((m) => {
-                  mDetail = formatMessage(m);
-                  client.messages.set(mDetail.id, mDetail);
-                });
-              } else {
-                mDetail = formatMessage(msg);
-              }
-              client.messages.set(mDetails.id, mDetails);
-            });
-            // Update our message pointer to be last message in page of messages
-            message =
-              0 < messagePage.size
-                ? messagePage.at(messagePage.size - 1)
-                : null;
+          messagePage.filter((m) => !excludedUsers.includes(m.author.id))
+        )
+        .then((messagePage) => {
+          messagePage.forEach((msg) => {
+            if (msg.type == "THREAD_STARTER_MESSAGE") {
+              getThreadStarter(msg).then((m) => {
+                mDetail = formatMessage(m);
+                client.messages.set(mDetail.id, mDetail);
+              });
+            } else {
+              mDetail = formatMessage(msg);
+            }
+            if (mDetail.id) {
+              client.messages.set(mDetail.id, mDetail);
+            }
           });
-      }
+        });
 
+      client.messages.sort();
       return true;
     }
   },
