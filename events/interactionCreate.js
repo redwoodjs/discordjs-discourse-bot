@@ -9,6 +9,17 @@ const discoursePost = require("../functions/discourse.js").discoursePost;
 
 // QUESTION unsure if passing client as prop is necessary
 
+// Permissions check
+// assuming role.id is an actual ID of a valid role:
+// if (message.member.roles.cache.has(role.id)) {
+//   console.log("Yay, the author of the message has the role!");
+// }
+
+// else {
+//   console.log("Nope, noppers, nadda.");
+// }
+
+
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
@@ -294,6 +305,7 @@ module.exports = {
           });
       }
 
+      // Below should be something like excludedUsers.includes(user.id)
       client.messages.sweep((user) => user.id === 975038570546987018);
       client.messages.sort();
       return true;
