@@ -1,8 +1,10 @@
 const {
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
-  MessageSelectMenu,
+  ActionRowBuilder,
+  ButtonBuilder,
+  EmbedBuilder,
+  SelectMenuBuilder,
+  ChannelType,
+  MessageType,
 } = require("discord.js");
 
 const discoursePost = require("../functions/discourse.js").discoursePost;
@@ -34,21 +36,21 @@ module.exports = {
     // Button Setup on Message Menu 'Discourse Submit' Selection
 
     if (interaction.commandName === "Discourse Submit") {
-      const row = new MessageActionRow().addComponents(
-        new MessageButton()
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
           .setCustomId("messageSubmit")
           .setLabel("Submit this Message")
-          .setStyle("PRIMARY"),
+          .setStyle("Primary"),
 
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId("channelSubmit")
           .setLabel("Submit this Thread/Channel")
-          .setStyle("PRIMARY"),
+          .setStyle("Primary"),
 
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId("selectMessages")
           .setLabel("Select Messages")
-          .setStyle("PRIMARY")
+          .setStyle("Primary")
       );
 
       let message = "";
@@ -62,7 +64,7 @@ module.exports = {
         messages = { title: message, raw: user + "\n" + message };
       });
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setColor("#0099ff")
         .setTitle(user)
         .setDescription(message);
@@ -135,8 +137,8 @@ module.exports = {
           options.length = 25;
         }
 
-        const row = new MessageActionRow().addComponents(
-          new MessageSelectMenu()
+        const row = new ActionRowBuilder().addComponents(
+          new SelectMenuBuilder()
             .setCustomId("select")
             .setPlaceholder("Nothing selected")
             .setMinValues(1)
@@ -179,16 +181,16 @@ module.exports = {
         messages.raw += "\n";
       });
 
-      const row = new MessageActionRow().addComponents(
-        new MessageButton()
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
           .setCustomId("abortSubmission")
           .setLabel("Abort Submission")
-          .setStyle("DANGER"),
+          .setStyle("Danger"),
 
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId("submitSelected")
           .setLabel("Submit")
-          .setStyle("PRIMARY")
+          .setStyle("Danger")
       );
 
       client.selectMessages.set(1, messages);
@@ -233,6 +235,7 @@ module.exports = {
 
     async function getThreadStarter(msg) {
       const chan = client.channels.cache.get(msg.reference.channelId);
+      // check https://discordjs.guide/additional-info/changes-in-v14.html#messagecomponent
       const mess = await chan.messages.fetch(msg.reference.messageId);
       return mess;
     }
@@ -254,7 +257,7 @@ module.exports = {
     async function fetchAllMessages(channelId) {
       const channel = client.channels.cache.get(channelId);
 
-      if (channel.isThread()) {
+      if (channel.type === ChannelType.GuildPublicThread) {
         threadName = channel.name;
       }
 
@@ -284,7 +287,7 @@ module.exports = {
           .then((messagePage) => {
             messagePage.forEach((msg) => {
               // this has issues (i believe) with starter messages that have been edited
-              if (msg.type == "THREAD_STARTER_MESSAGE") {
+              if (msg.type === MessageType.ThreadStarterMessage) {
                 getThreadStarter(msg).then((m) => {
                   mDetail = formatMessage(m);
                   // ideally this would be below; after the else... but it doesn't work unless here (promises...)
@@ -317,10 +320,11 @@ module.exports = {
     async function fetchRecentMessages(channelId) {
       const channel = client.channels.cache.get(channelId);
 
-      if (channel.isThread()) {
+      if (channel.type === ChannelType.GuildPublicThread) {
         threadName = channel.name;
       }
-
+      
+      var test = [];
       await channel.messages
         .fetch({ limit: 25 })
         .then((messagePage) =>
@@ -328,7 +332,8 @@ module.exports = {
         )
         .then((messagePage) => {
           messagePage.forEach((msg) => {
-            if (msg.type == "THREAD_STARTER_MESSAGE") {
+            if (msg.type === MessageType.ThreadStarterMessage) {
+              test = getThreadStarter(msg)
               getThreadStarter(msg).then((m) => {
                 mDetail = formatMessage(m);
                 client.messages.set(mDetail.id, mDetail);
@@ -338,11 +343,13 @@ module.exports = {
             }
             if (mDetail.id) {
               client.messages.set(mDetail.id, mDetail);
+              console.log(client.messages)
             }
           });
         });
 
       client.messages.sort();
+      console.log(test)
       return true;
     }
   },
