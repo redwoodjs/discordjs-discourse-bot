@@ -21,11 +21,9 @@ const discoursePost = require("../functions/discourse.js").discoursePost;
 //   console.log("Nope, noppers, nadda.");
 // }
 
-
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
-
     // Filter for bots, etc
     var excludedUsers = ["975038570546987018", "878399831238909952"];
 
@@ -323,33 +321,32 @@ module.exports = {
       if (channel.type === ChannelType.GuildPublicThread) {
         threadName = channel.name;
       }
+
+      const messages = await channel.messages.fetch({ limit: 25 });
+
+      const filteredMessages = messages.filter(
+        (m) => !excludedUsers.includes(m.author.id)
+      );
       
-      var test = [];
-      await channel.messages
-        .fetch({ limit: 25 })
-        .then((messagePage) =>
-          messagePage.filter((m) => !excludedUsers.includes(m.author.id))
-        )
-        .then((messagePage) => {
-          messagePage.forEach((msg) => {
-            if (msg.type === MessageType.ThreadStarterMessage) {
-              test = getThreadStarter(msg)
-              getThreadStarter(msg).then((m) => {
-                mDetail = formatMessage(m);
-                client.messages.set(mDetail.id, mDetail);
-              });
-            } else {
-              mDetail = formatMessage(msg);
-            }
-            if (mDetail.id) {
-              client.messages.set(mDetail.id, mDetail);
-              console.log(client.messages)
-            }
-          });
-        });
+     for (const msg of filteredMessages.values()) {
+        let mDetail;
+        console.log(msg)
+
+        if (msg.type === MessageType.ThreadStarterMessage) {
+          const starter = await getThreadStarter(msg);
+
+          mDetail = formatMessage(starter);
+          client.messages.set(mDetail.id, mDetail);
+          client.messages;
+        } else {
+          mDetail = formatMessage(msg);
+        }
+        if (mDetail.id) {
+          client.messages.set(mDetail.id, mDetail);
+        }
+      }
 
       client.messages.sort();
-      console.log(test)
       return true;
     }
   },
