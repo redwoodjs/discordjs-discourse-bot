@@ -84,7 +84,7 @@ module.exports = {
     if (interaction.customId == "messageSubmit") {
       discoursePost(messages);
       await interaction.reply({
-        content: "Message submitted to discourse by " + interaction.user,
+        content: "Message submitted to discourse by " + interaction.user.username,
       });
     }
 
@@ -99,17 +99,20 @@ module.exports = {
           raw: "",
         };
 
+        // Possible prompt for custom title
         messages.title = client.messages.first().content;
+
         client.messages.forEach((m) => {
           messages.raw += "**" + m.username + "**\n";
           messages.raw += m.content + "\n";
           messages.raw += "\n";
         });
 
-        discoursePost(messages);
-
+        // discoursePost(messages);
+        console.log(messages);
+        console.log(interaction)
         await interaction.reply({
-          content: "Message submitted to discourse by " + interaction.user,
+          content: "Message submitted to discourse by " + interaction.user.username,
         });
       }
     }
@@ -206,7 +209,7 @@ module.exports = {
       // Should this be async, and then run a .clear() function on collection after returns true?
       discoursePost(client.selectMessages.first());
       await interaction.reply({
-        content: "Message submitted to discourse by " + interaction.user,
+        content: "Message submitted to discourse by " + interaction.user.username,
       });
     }
 
@@ -269,6 +272,14 @@ module.exports = {
 
       let message = await channel.messages
         .fetch({ limit: 1 })
+        // This should be refactored... to exclude users
+        // It does not work right now, because it fetches the first message returned, and if the user is in the excluded user, it will filter
+        // The only message in the returned message Collection
+        // Ideally - fetch 100 messages; filter excluded users, then set the first messages from there
+
+        // .then((messagePage) =>
+        //   messagePage.filter((m) => !excludedUsers.includes(m.author.id))
+        // )
         .then((messagePage) =>
           messagePage.size === 1 ? messagePage.at(0) : null
         );
@@ -289,7 +300,7 @@ module.exports = {
                 getThreadStarter(msg).then((m) => {
                   mDetail = formatMessage(m);
                   // ideally this would be below; after the else... but it doesn't work unless here (promises...)
-                  client.messages.set(mDetail.id, mDetail);
+                  return client.messages.set(mDetail.id, mDetail);
                 });
               } else {
                 mDetail = formatMessage(msg);
@@ -306,8 +317,9 @@ module.exports = {
           });
       }
 
-      // Below should be something like excludedUsers.includes(user.id)
-      client.messages.sweep((user) => user.id === 975038570546987018);
+      // I don't think sweeping is working right
+
+      client.messages.sweep((user) => excludedUsers.includes(user.id));
       client.messages.sort();
       return true;
     }
@@ -327,10 +339,10 @@ module.exports = {
       const filteredMessages = messages.filter(
         (m) => !excludedUsers.includes(m.author.id)
       );
-      
-     for (const msg of filteredMessages.values()) {
+
+      for (const msg of filteredMessages.values()) {
         let mDetail;
-        console.log(msg)
+        console.log(msg);
 
         if (msg.type === MessageType.ThreadStarterMessage) {
           const starter = await getThreadStarter(msg);
