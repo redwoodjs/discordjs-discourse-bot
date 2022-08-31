@@ -251,10 +251,10 @@
   "resolved" "https://registry.npmjs.org/discord-api-types/-/discord-api-types-0.36.3.tgz"
   "version" "0.36.3"
 
-"discord-api-types@^0.37.0":
-  "integrity" "sha512-6LlL0xceiZs/kQ5PeKe5inkcjR73vagt3oACsP/C5IWKjXfzLGKrXn6yRYgiHIeJyFZ1xVPRJYE4W/u8UTT4ig=="
-  "resolved" "https://registry.npmjs.org/discord-api-types/-/discord-api-types-0.37.0.tgz"
-  "version" "0.37.0"
+"discord-api-types@^0.37.4":
+  "integrity" "sha512-QgqYlUokWM++hdwvAtgVNLjmFumPBzFy+uWnnfVDiwBXKm+5jXHJPk2lx2eilkv/706UpAJPLSk/uVCY9NocjA=="
+  "resolved" "https://registry.npmjs.org/discord-api-types/-/discord-api-types-0.37.4.tgz"
+  "version" "0.37.4"
 
 "discord.js@^14.0.0":
   "integrity" "sha512-apdWNLkjAkeEnuNpB8H6rS/4OgrXQlSAjuuzeodjCOdIXy3OwOjD314V/HiSttcAlr9+r3ONhaT5qvbDad5SIg=="
