@@ -93,6 +93,8 @@ module.exports = {
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
+      client.messages.clear()
+
       let result = await fetchAllMessages(interaction.channelId);
 
       if (result) {
