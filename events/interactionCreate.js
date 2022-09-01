@@ -34,6 +34,10 @@ module.exports = {
     // Button Setup 
 
     if (interaction.commandName === "Discourse Submit") {
+      // clearing here starts fresh on any new discourse submit
+      // problem: if multiple people are using this at once will it clear everyone's messages
+
+      client.messages.clear()
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("messageSubmit")
@@ -94,7 +98,6 @@ module.exports = {
 
     if (interaction.customId == "channelSubmit") {
       client.messages.clear()
-
       let result = await fetchAllMessages(interaction.channelId);
 
       if (result) {
