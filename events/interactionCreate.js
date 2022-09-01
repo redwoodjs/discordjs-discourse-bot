@@ -97,7 +97,6 @@ module.exports = {
     // Submit all messages if 'Submit All' button is clicked
 
     if (interaction.customId == "channelSubmit") {
-      client.messages.clear()
       let result = await fetchAllMessages(interaction.channelId);
 
       if (result) {
@@ -121,14 +120,12 @@ module.exports = {
             content:
               "Message submitted to discourse by " + interaction.user.username,
               ephemeral: true,
-          })
-          .then(() => client.messages.clear());
+          });
       }
     }
 
     // Build message selectors if 'Select Messages' button is clicked
     if (interaction.customId == "selectMessages") {
-      client.messages.clear()
       let result = await fetchRecentMessages(interaction.channelId);
 
       if (result) {
@@ -223,8 +220,7 @@ module.exports = {
           content:
             "Message submitted to discourse by " + interaction.user.username,
             ephemeral: true,
-        })
-        .then(() => client.messages.clear());
+        });
     }
 
     if (interaction.customId == "abortSubmission") {
@@ -250,6 +246,7 @@ module.exports = {
 
     async function getThreadStarter(msg) {
       const chan = client.channels.cache.get(msg.reference.channelId);
+
       // check https://discordjs.guide/additional-info/changes-in-v14.html#messagecomponent
       const mess = await chan.messages.fetch(msg.reference.messageId);
       return mess;
@@ -371,6 +368,7 @@ module.exports = {
         }
       }
 
+      client.messages.sweep((user) => excludedUsers.includes(user.id));
       client.messages.sort();
       return true;
     }
