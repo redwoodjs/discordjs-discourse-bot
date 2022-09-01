@@ -84,7 +84,8 @@ module.exports = {
     if (interaction.customId == "messageSubmit") {
       discoursePost(messages);
       await interaction.reply({
-        content: "Message submitted to discourse by " + interaction.user.username,
+        content:
+          "Message submitted to discourse by " + interaction.user.username,
       });
     }
 
@@ -108,12 +109,13 @@ module.exports = {
           messages.raw += "\n";
         });
 
-        // discoursePost(messages);
-        console.log(messages);
-        console.log(interaction)
-        await interaction.reply({
-          content: "Message submitted to discourse by " + interaction.user.username,
-        });
+        discoursePost(messages);
+        await interaction
+          .reply({
+            content:
+              "Message submitted to discourse by " + interaction.user.username,
+          })
+          .then(() => client.messages.clear());
       }
     }
 
@@ -208,9 +210,12 @@ module.exports = {
     if (interaction.customId == "submitSelected") {
       // Should this be async, and then run a .clear() function on collection after returns true?
       discoursePost(client.selectMessages.first());
-      await interaction.reply({
-        content: "Message submitted to discourse by " + interaction.user.username,
-      });
+      await interaction
+        .reply({
+          content:
+            "Message submitted to discourse by " + interaction.user.username,
+        })
+        .then(() => client.messages.clear());
     }
 
     if (interaction.customId == "abortSubmission") {
