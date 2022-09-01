@@ -86,6 +86,7 @@ module.exports = {
       await interaction.reply({
         content:
           "Message submitted to discourse by " + interaction.user.username,
+          ephemeral: true,
       });
     }
 
@@ -114,6 +115,7 @@ module.exports = {
           .reply({
             content:
               "Message submitted to discourse by " + interaction.user.username,
+              ephemeral: true,
           })
           .then(() => client.messages.clear());
       }
@@ -214,6 +216,7 @@ module.exports = {
         .reply({
           content:
             "Message submitted to discourse by " + interaction.user.username,
+            ephemeral: true,
         })
         .then(() => client.messages.clear());
     }
@@ -347,8 +350,7 @@ module.exports = {
 
       for (const msg of filteredMessages.values()) {
         let mDetail;
-        console.log(msg);
-
+        
         if (msg.type === MessageType.ThreadStarterMessage) {
           const starter = await getThreadStarter(msg);
 
