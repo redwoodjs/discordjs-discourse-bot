@@ -31,7 +31,7 @@ module.exports = {
     // Menu & Button Setters
     // *********************
 
-    // Button Setup on Message Menu 'Discourse Submit' Selection
+    // Button Setup 
 
     if (interaction.commandName === "Discourse Submit") {
       const row = new ActionRowBuilder().addComponents(
@@ -76,7 +76,7 @@ module.exports = {
     }
 
     // *********************
-    // Button Functions
+    // Submit Functions
     // *********************
 
     // Submit selected messages if 'Submit this Message' button is clicked
@@ -123,6 +123,7 @@ module.exports = {
 
     // Build message selectors if 'Select Messages' button is clicked
     if (interaction.customId == "selectMessages") {
+      client.messages.clear()
       let result = await fetchRecentMessages(interaction.channelId);
 
       if (result) {
