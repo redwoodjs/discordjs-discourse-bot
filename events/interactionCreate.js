@@ -253,9 +253,19 @@ module.exports = {
     }
 
     // Format message content for posts
+
+        // images show '' in description
+    // in message body: attachments: Collection(1) [Map] { '1021485317221515294' => [Attachment] },
+    // signals an attachment
+    // not sure how to fetch or link to etc.
+
     function formatMessage(msg) {
       fMessage = {};
-      fMessage.content = msg.content;
+      if (msg.content == '') {
+        if (msg.attachments.size > 0) {
+          fMessage.content = "Attachment";
+        }
+      } else fMessage.content = msg.content;
       fMessage.username = msg.author.username;
       fMessage.createdTimestamp = msg.createdTimestamp;
       fMessage.id = msg.id;
@@ -263,6 +273,15 @@ module.exports = {
       return fMessage;
     }
 
+    function formatTitle (title) {
+      // Can these prompts 'interrupt' the select menu actions?
+      
+      // TODO: Prompt for title review
+
+      // TODO: Prompt for title edit
+
+      return title;
+    }
     // fetch over 100 function taken from: https://stackoverflow.com/a/71620968
     // pointer is updated in message (while) loop
 
@@ -347,11 +366,7 @@ module.exports = {
 
       const messages = await channel.messages.fetch({ limit: 25 });
 
-      const filteredMessages = messages.filter(
-        (m) => !excludedUsers.includes(m.author.id)
-      );
-
-      for (const msg of filteredMessages.values()) {
+      for (const msg of messages.values()) {
         let mDetail;
         
         if (msg.type === MessageType.ThreadStarterMessage) {
@@ -367,6 +382,9 @@ module.exports = {
           client.messages.set(mDetail.id, mDetail);
         }
       }
+
+      // this might sweep needle created thread starter messages
+      // have to figure out a workaround
 
       client.messages.sweep((user) => excludedUsers.includes(user.id));
       client.messages.sort();

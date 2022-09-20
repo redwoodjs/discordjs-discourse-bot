@@ -24,9 +24,8 @@ function discoursePost(message) {
     raw: message.raw,
     category: 22
   };
-
+  console.log(message.raw)
   data = JSON.stringify(data);
-
   const options = {
     hostname: hostname,
     port: 443,
