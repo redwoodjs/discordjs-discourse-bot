@@ -24,8 +24,10 @@ function discoursePost(message) {
     raw: message.raw,
     category: 22
   };
-  console.log(message.raw)
-  data = JSON.stringify(data);
+  
+  data = JSON.stringify(data).replace(/-/g, "").replace(/’/g, "'");
+
+  console.log(data)
   const options = {
     hostname: hostname,
     port: 443,
