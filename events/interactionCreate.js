@@ -320,9 +320,6 @@ module.exports = {
       while (message) {
         await channel.messages
           .fetch({ limit: 100, before: message.id })
-          .then((messagePage) =>
-            messagePage.filter((m) => !excludedUsers.includes(m.author.id))
-          )
           .then((messagePage) => {
             messagePage.forEach((msg) => {
               // this has issues (i believe) with starter messages that have been edited

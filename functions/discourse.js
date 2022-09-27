@@ -8,6 +8,18 @@ const { hostname, apiKey, apiUsername } = require("../config.json");
 // Etc. /admin/groups; /t/{id}; /latest
 const path = "/posts";
 
+
+function formatTitle(title) {
+  if (title.length > 255) {
+    title.substring(0, 255);
+  }
+  if (title.length < 20) {
+    title.padEnd(20, "_")
+  }
+
+  return title.replace(/-/g, "").replace(/’/g, "'")
+}
+
 // Data will be request object? sent from function
 function discoursePost(message) {
   // Basic Nodejs http post implementation: https://nodejs.dev/learn/making-http-requests-with-nodejs
@@ -20,7 +32,7 @@ function discoursePost(message) {
   // Next leg of dev will be refactoring and writing in Redwood on API side;
   // Then will pick up here
   var data = {
-    title: message.title,
+    title: formatTitle(message.title),
     raw: message.raw,
     category: 22
   };
@@ -47,14 +59,17 @@ function discoursePost(message) {
     res.on('data', d => {
       process.stdout.write(d);
     });
+    return res;
   });
   
   req.on('error', error => {
     console.error(error);
+    return error;
   });
   
   req.write(data);
   req.end();
+
 
 }
 
