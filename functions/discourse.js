@@ -1,5 +1,4 @@
 const https = require("node:https");
-const axios = require("axios").default;
 const { hostname, apiKey, apiUsername } = require("../config.json");
 
 // Discourse API Resource: https://docs.discourse.org/
@@ -8,6 +7,18 @@ const { hostname, apiKey, apiUsername } = require("../config.json");
 // Path should correspond with API
 // Etc. /admin/groups; /t/{id}; /latest
 const path = "/posts";
+
+
+function formatTitle(title) {
+  if (title.length > 255) {
+    title.substring(0, 255);
+  }
+  if (title.length < 20) {
+    title.padEnd(20, "_")
+  }
+
+  return title.replace(/-/g, "").replace(/’/g, "'")
+}
 
 // Data will be request object? sent from function
 function discoursePost(message) {
@@ -21,13 +32,14 @@ function discoursePost(message) {
   // Next leg of dev will be refactoring and writing in Redwood on API side;
   // Then will pick up here
   var data = {
-    title: "This is a test post from Discord bot.",
-    raw: "This is a test message from discord discourse bot. It is over 20 characters.",
+    title: formatTitle(message.title),
+    raw: message.raw,
     category: 22
   };
+  
+  data = JSON.stringify(data).replace(/-/g, "").replace(/’/g, "'");
 
-  data = JSON.stringify(data);
-
+  console.log(data)
   const options = {
     hostname: hostname,
     port: 443,
@@ -47,10 +59,12 @@ function discoursePost(message) {
     res.on('data', d => {
       process.stdout.write(d);
     });
+    return res;
   });
   
   req.on('error', error => {
     console.error(error);
+    return error;
   });
   
   req.write(data);

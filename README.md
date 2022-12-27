@@ -1,22 +1,3 @@
-# background
-
-zOMG I've wanted this, like, forever
-I've never considered moving Discord Threads to Discourse Posts... TBD
-But I'd love to see three Bot capabilities:
-1. Command to "post" a message or thread to the Forums
-
-Lots of times there's a helpful code snippet or thread that we want to "archive" in the Forums for Knowledge Base purposes. Could a bot command do this seemlessly?
-2. Move a conversation to the Forums
-Instead of creating threads here or having an ongoing conversation, what if there was a simple way to "move" a conversation over to the Forums and continue from there? 
-- bot prompts
-- command to copy/paste/create Forum post and gives back the link
-3. Search the Forums
-I've dreamed of a command that would let you search the forums (word or phrase) and return the top 5 results with link to "view all" on the Forums
-
-
-# discordjs-discourse-bot
-
-
 ## Discord to Discourse Bot
 
 Creates message menu button to send to discourse
@@ -70,6 +51,8 @@ run: `node index.js`
 ~~**To-Do**: Create discourse plugin to accept message and post to topic~~
 
 **To-Do**: Convert to ES6?/RW
+Filter needle username out
+Parse ``` at end of code blocks into newline
 
 **Cleanup**: Fetch all messages function can be cleaner
 
@@ -84,4 +67,11 @@ Data Explorer Queries: https://meta.discourse.org/t/how-to-run-data-explorer-que
 > Virtually any action that can be performed through the Discourse user interface can also be triggered with the Discourse API. For a general overview of how to find the correct API request for an action, see How to reverse engineer the Discourse API 70.
 
 Official Direct SQL Access API for Discourse: https://meta.discourse.org/t/new-official-direct-sql-access-api-for-discourse-mini-sql/90441
+
+
+Check errors & Report: 
+
+statusCode: 422
+{"action":"create_post","errors":["Title has already been used"]}
+
 
