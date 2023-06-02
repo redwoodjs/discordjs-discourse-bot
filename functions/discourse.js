@@ -1,75 +1,72 @@
 const https = require("node:https");
-const { hostname, apiKey, apiUsername } = require("../config.json");
+const { discourseHostname, discourseApiKey, discourseApiUsername } = require("../config.json");
 
 // Discourse API Resource: https://docs.discourse.org/
 
 // Path will be dynamic based on post response
 // Path should correspond with API
 // Etc. /admin/groups; /t/{id}; /latest
-const path = "/posts";
+const DISCOURSE_API_ENDPOINT = "/posts";
+const CATEGORY_ID = 22;
 
-
+/**
+ * Formats the title to meet Discourse's requirements
+ * @param {string} title - the original title
+ * @returns {string} - the formatted title
+ */
 function formatTitle(title) {
   if (title.length > 255) {
-    title.substring(0, 255);
+    title = title.substring(0, 255);
   }
   if (title.length < 20) {
-    title.padEnd(20, "_")
+    title = title.padEnd(20, "_")
   }
 
-  return title.replace(/-/g, "").replace(/’/g, "'")
+  return title.replace(/-/g, "").replace(/’/g, "'");
 }
 
-// Data will be request object? sent from function
+/**
+ * Makes a post request to the Discourse API
+ * @param {object} message - the message to post
+ * @param {string} message.title - the title of the post
+ * @param {string} message.raw - the raw content of the post
+ */
 function discoursePost(message) {
-  // Basic Nodejs http post implementation: https://nodejs.dev/learn/making-http-requests-with-nodejs
-  // Set options as needed; ex port: 3000
-
-  // This will be formatted from the message object passed to it;
-  // Post bodies have to be 20 characters minimum;
-  // Will need to write a validator for length.
-  // This version of the project will stop here; 
-  // Next leg of dev will be refactoring and writing in Redwood on API side;
-  // Then will pick up here
-  var data = {
+  const data = {
     title: formatTitle(message.title),
     raw: message.raw,
-    category: 22
+    category: CATEGORY_ID
   };
-  
-  data = JSON.stringify(data).replace(/-/g, "").replace(/’/g, "'");
 
-  console.log(data)
+  const postData = JSON.stringify(data).replace(/-/g, "").replace(/’/g, "'");
+
   const options = {
-    hostname: hostname,
+    hostname: discourseHostname,
     port: 443,
-    path: path,
+    path: DISCOURSE_API_ENDPOINT,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': data.length,
-      "Api-Key": apiKey,
-      "Api-Username": apiUsername,
+      'Content-Length': postData.length,
+      "Api-Key": discourseApiKey,
+      "Api-Username": discourseApiUsername,
     },
   };
-  
+
   const req = https.request(options, res => {
     console.log(`statusCode: ${res.statusCode}`);
-  
+
     res.on('data', d => {
       process.stdout.write(d);
     });
-    return res;
   });
-  
+
   req.on('error', error => {
     console.error(error);
-    return error;
   });
-  
-  req.write(data);
-  req.end();
 
+  req.write(postData);
+  req.end();
 }
 
 module.exports = { discoursePost };
